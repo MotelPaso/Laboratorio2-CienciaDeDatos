@@ -1,0 +1,16 @@
+[0] Config.pm:329> INFO - This is Biber 2.22
+[0] Config.pm:332> INFO - Logfile is 'sample.blg'
+[53] biber:342> INFO - === Wed Nov 18, 2026, 21:27:42
+[66] Biber.pm:421> INFO - Reading 'sample.bcf'
+[169] Biber.pm:1002> INFO - Found 1 citekeys in bib section 0
+[178] Biber.pm:4487> INFO - Processing section 0
+[187] Biber.pm:4680> INFO - Looking for bibtex file 'example.bib' for section 0
+[187] bibtex.pm:1713> INFO - LaTeX decoding ...
+[188] bibtex.pm:1519> INFO - Found BibTeX data source 'example.bib'
+[219] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[219] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'level = 4' with 'level = 2'
+[219] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[219] Biber.pm:4307> INFO - Sorting list 'cms/global//global/global/global' of type 'entry' with template 'cms' and locale 'en-US'
+[219] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[220] bbl.pm:676> INFO - Writing 'sample.bbl' with encoding 'UTF-8'
+[221] bbl.pm:779> INFO - Output to sample.bbl

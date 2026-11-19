@@ -1,0 +1,68 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{cms/global//global/global/global}
+    \entry{key-Arthur}{article}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=255a8e65f3ee4cbff3915c79a2ef8767}{%
+           family={Cummings},
+           familyi={C\bibinitperiod},
+           given={Arthur\bibnamedelima B},
+           giveni={A\bibinitperiod\bibinitdelim B\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=b6b9881670a8aaa28f87687723a55e86}{%
+           family={Eftekhary},
+           familyi={E\bibinitperiod},
+           given={David},
+           giveni={D\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=c188178aa1fefb5b18daf7e61992e559}{%
+           family={House},
+           familyi={H\bibinitperiod},
+           given={Frank\bibnamedelima G},
+           giveni={F\bibinitperiod\bibinitdelim G\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \strng{fullhash}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \strng{fullhashraw}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \strng{bibnamehash}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \strng{authorbibnamehash}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \strng{authornamehash}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \strng{authorfullhash}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \strng{authorfullhashraw}{e71b7f9a6a74b7ffdc9cb0ed531092b0}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{author}
+      \field{journaltitle}{Journal of Sketchy Physics}
+      \field{number}{2}
+      \field{title}{The accurate determination of college students’ coefficients of friction}
+      \field{volume}{13}
+      \field{year}{2003}
+      \field{pages}{46\bibrangedash 129}
+      \range{pages}{84}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
