@@ -76,6 +76,6 @@
     </config>
     <config key="filestores">
         <entry key="file_store_location" type="xstring" isnull="true" value=""/>
-        <entry key="file_store_id" type="xstring" value="84fea01f-9a5a-47f1-a025-4311326aa796"/>
+        <entry key="file_store_id" type="xstring" value="e65c3e44-b824-4871-a7ec-e8ab809c169a"/>
     </config>
 </config>
