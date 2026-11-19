@@ -16,6 +16,21 @@
         <entry key="actionEmpty" type="xstring" value="FAIL"/>
     </config>
     <config key="variables"/>
+    <config key="nodeAnnotation">
+        <entry key="text" type="xstring" value="E4.1 ·%%00010Partición 70/30 estratificada seed 42"/>
+        <entry key="contentType" type="xstring" value="text/plain"/>
+        <entry key="bgcolor" type="xint" value="16777215"/>
+        <entry key="x-coordinate" type="xint" value="0"/>
+        <entry key="y-coordinate" type="xint" value="0"/>
+        <entry key="width" type="xint" value="0"/>
+        <entry key="height" type="xint" value="0"/>
+        <entry key="alignment" type="xstring" value="CENTER"/>
+        <entry key="borderSize" type="xint" value="0"/>
+        <entry key="borderColor" type="xint" value="16777215"/>
+        <entry key="defFontSize" type="xint" value="9"/>
+        <entry key="annotation-version" type="xint" value="20151123"/>
+        <config key="styles"/>
+    </config>
     <entry key="customDescription" type="xstring" isnull="true" value=""/>
     <entry key="state" type="xstring" value="EXECUTED"/>
     <entry key="factory" type="xstring" value="org.knime.base.node.preproc.partition.PartitionNodeFactory"/>
@@ -37,19 +52,19 @@
             <entry key="index" type="xint" value="1"/>
             <entry key="port_spec_class" type="xstring" value="org.knime.core.data.DataTableSpec"/>
             <entry key="port_object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
-            <entry key="port_object_summary" type="xstring" value="Rows: 62008, Cols: 574"/>
+            <entry key="port_object_summary" type="xstring" value="Rows: 62008, Cols: 182"/>
             <entry key="port_dir_location" type="xstring" value="port_1"/>
         </config>
         <config key="port_2">
             <entry key="index" type="xint" value="2"/>
             <entry key="port_spec_class" type="xstring" value="org.knime.core.data.DataTableSpec"/>
             <entry key="port_object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
-            <entry key="port_object_summary" type="xstring" value="Rows: 26576, Cols: 574"/>
+            <entry key="port_object_summary" type="xstring" value="Rows: 26576, Cols: 182"/>
             <entry key="port_dir_location" type="xstring" value="port_2"/>
         </config>
     </config>
     <config key="filestores">
         <entry key="file_store_location" type="xstring" isnull="true" value=""/>
-        <entry key="file_store_id" type="xstring" value="5ffb7783-d3aa-4237-ad29-b8fb9ea4dee5"/>
+        <entry key="file_store_id" type="xstring" value="0dc96618-7f71-42b1-9a94-e2c0309e0e10"/>
     </config>
 </config>

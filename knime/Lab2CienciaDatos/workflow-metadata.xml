@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workflow-metadata content-type="text/plain" xmlns="http://www.knime.org/core/node/workflow/metadata/v1.0">
     <last-modified>2026-11-18T23:00:00.000-03:00</last-modified>
-    <description>Workflow KNIME del Laboratorio 2. Prediccion de demanda a 30 dias por articulo (H&amp;M).</description>
+    <description>Prediccion de demanda a 30 dias por articulo (H&amp;M Personalized Fashion Recommendations). Ventana de observacion: 2018-09-20 a 2020-08-23. Ventana de prediccion: 2020-08-24 a 2020-09-22. Poblacion: articulos con >=5 unidades vendidas en observacion (88.584; 26,9 % positivos). Entrada: data/tabla_modelado.csv (generada con Etapa0.py). Modelos: regresion logistica L2, L1 y L2 sin variables de alta cardinalidad; particion estratificada 70/30 (seed 42); umbral 0,5. Salidas: resultados/metricas_modelos.csv, coeficientes.csv, calibracion.csv y lift.csv. Recomendado: 8 GB de heap.</description>
 </workflow-metadata>

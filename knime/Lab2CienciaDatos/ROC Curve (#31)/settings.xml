@@ -10,6 +10,16 @@
         <entry key="imageFormat" type="xstring" value="SVG"/>
         <entry key="width" type="xint" value="800"/>
         <entry key="height" type="xint" value="600"/>
+        <config key="predictionColumnsV2">
+            <config key="manualFilter">
+                <config key="manuallySelected">
+                    <entry key="array-size" type="xint" value="1"/>
+                    <entry key="0" type="xstring" value="P (y_demanda_30d=1)"/>
+                </config>
+            </config>
+        </config>
+        <entry key="positiveClassValue" type="xstring" value="1"/>
+        <entry key="targetColumnV3" type="xstring" value="y_demanda_30d"/>
     </config>
     <config key="view">
         <entry key="targetColumnV3" type="xstring" value="y_demanda_30d"/>
@@ -621,8 +631,23 @@
         <entry key="showTooltip" type="xboolean" value="true"/>
     </config>
     <config key="view_variables"/>
+    <config key="nodeAnnotation">
+        <entry key="text" type="xstring" value="E6.7 ·%%00010ROC M1"/>
+        <entry key="contentType" type="xstring" value="text/plain"/>
+        <entry key="bgcolor" type="xint" value="16777215"/>
+        <entry key="x-coordinate" type="xint" value="0"/>
+        <entry key="y-coordinate" type="xint" value="0"/>
+        <entry key="width" type="xint" value="0"/>
+        <entry key="height" type="xint" value="0"/>
+        <entry key="alignment" type="xstring" value="CENTER"/>
+        <entry key="borderSize" type="xint" value="0"/>
+        <entry key="borderColor" type="xint" value="16777215"/>
+        <entry key="defFontSize" type="xint" value="9"/>
+        <entry key="annotation-version" type="xint" value="20151123"/>
+        <config key="styles"/>
+    </config>
     <entry key="customDescription" type="xstring" isnull="true" value=""/>
-    <entry key="state" type="xstring" value="EXECUTED"/>
+    <entry key="state" type="xstring" value="CONFIGURED"/>
     <entry key="factory" type="xstring" value="org.knime.base.views.node.roccurve.ROCCurveNodeFactory"/>
     <entry key="node-name" type="xstring" value="ROC Curve"/>
     <entry key="node-bundle-name" type="xstring" value="KNIME Views"/>
@@ -639,21 +664,11 @@
         <config key="Output Image"/>
     </config>
     <entry key="name" type="xstring" value="ROC Curve"/>
-    <entry key="hasContent" type="xboolean" value="true"/>
+    <entry key="hasContent" type="xboolean" value="false"/>
     <entry key="isInactive" type="xboolean" value="false"/>
     <config key="ports"/>
-    <config key="internalObjects">
-        <entry key="location" type="xstring" value="internalTables"/>
-        <config key="content">
-            <config key="object_0">
-                <entry key="index" type="xint" value="0"/>
-                <entry key="type" type="xstring" value="table"/>
-                <entry key="table_dir_location" type="xstring" value="object_0"/>
-            </config>
-        </config>
-    </config>
     <config key="filestores">
         <entry key="file_store_location" type="xstring" isnull="true" value=""/>
-        <entry key="file_store_id" type="xstring" value="b7d0f1aa-f407-477a-bfe5-0ca04821ba4e"/>
+        <entry key="file_store_id" type="xstring" isnull="true" value=""/>
     </config>
 </config>

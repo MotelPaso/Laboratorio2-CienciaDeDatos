@@ -15,3 +15,7 @@ knime/Lab2CienciaDatos/.savedWithData
 
 # Documentos de la asignatura
 *.md
+
+# Cachés de vistas y artefactos de KNIME
+knime/Lab2CienciaDatos/*/internalTables/
+knime/Lab2CienciaDatos/.artifacts/

@@ -36,45 +36,60 @@
             <entry key="type" type="xstring" value="variable"/>
             <entry key="name" type="xstring" value="Accuracy"/>
             <entry key="class" type="xstring" value="DOUBLE"/>
-            <entry key="value" type="xdouble" value="0.87816074653823"/>
+            <entry key="value" type="xdouble" value="0.8789885611077664"/>
         </config>
         <config key="Variable_6">
             <entry key="type" type="xstring" value="variable"/>
             <entry key="name" type="xstring" value="Error"/>
             <entry key="class" type="xstring" value="DOUBLE"/>
-            <entry key="value" type="xdouble" value="0.12183925346177002"/>
+            <entry key="value" type="xdouble" value="0.12101143889223359"/>
         </config>
         <config key="Variable_7">
             <entry key="type" type="xstring" value="variable"/>
             <entry key="name" type="xstring" value="#Correct"/>
             <entry key="class" type="xstring" value="INTEGER"/>
-            <entry key="value" type="xint" value="23338"/>
+            <entry key="value" type="xint" value="23360"/>
         </config>
         <config key="Variable_8">
             <entry key="type" type="xstring" value="variable"/>
             <entry key="name" type="xstring" value="#False"/>
             <entry key="class" type="xstring" value="INTEGER"/>
-            <entry key="value" type="xint" value="3238"/>
+            <entry key="value" type="xint" value="3216"/>
         </config>
         <config key="Variable_9">
             <entry key="type" type="xstring" value="variable"/>
             <entry key="name" type="xstring" value="Cohen's kappa"/>
             <entry key="class" type="xstring" value="DOUBLE"/>
-            <entry key="value" type="xdouble" value="0.6915583514384412"/>
+            <entry key="value" type="xdouble" value="0.685729521672276"/>
         </config>
     </config>
     <config key="internal_node_subsettings">
         <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
     </config>
     <config key="model">
-        <entry key="first" type="xstring" value="Prediction (y_demanda_30d)"/>
-        <entry key="second" type="xstring" value="y_demanda_30d"/>
+        <entry key="first" type="xstring" value="y_demanda_30d"/>
+        <entry key="second" type="xstring" value="prediccion_M2"/>
         <entry key="sortingStrategy" type="xint" value="2"/>
         <entry key="sortingReversed" type="xboolean" value="false"/>
         <entry key="flowVarPrefix" type="xstring" isnull="true" value=""/>
         <entry key="ignore.missing.values" type="xboolean" value="true"/>
     </config>
     <config key="variables"/>
+    <config key="nodeAnnotation">
+        <entry key="text" type="xstring" value="E6.5 ·%%00010Matriz confusión M2"/>
+        <entry key="contentType" type="xstring" value="text/plain"/>
+        <entry key="bgcolor" type="xint" value="16777215"/>
+        <entry key="x-coordinate" type="xint" value="0"/>
+        <entry key="y-coordinate" type="xint" value="0"/>
+        <entry key="width" type="xint" value="0"/>
+        <entry key="height" type="xint" value="0"/>
+        <entry key="alignment" type="xstring" value="CENTER"/>
+        <entry key="borderSize" type="xint" value="0"/>
+        <entry key="borderColor" type="xint" value="16777215"/>
+        <entry key="defFontSize" type="xint" value="9"/>
+        <entry key="annotation-version" type="xint" value="20151123"/>
+        <config key="styles"/>
+    </config>
     <entry key="customDescription" type="xstring" isnull="true" value=""/>
     <entry key="state" type="xstring" value="EXECUTED"/>
     <entry key="factory" type="xstring" value="org.knime.base.node.mine.scorer.accuracy.AccuracyScorer2NodeFactory"/>
@@ -109,6 +124,6 @@
     </config>
     <config key="filestores">
         <entry key="file_store_location" type="xstring" isnull="true" value=""/>
-        <entry key="file_store_id" type="xstring" value="62cb2b9d-978a-4a1a-b537-5c45ba713543"/>
+        <entry key="file_store_id" type="xstring" value="b7ece0bd-96c3-417f-b769-ce1af1f10abd"/>
     </config>
 </config>
