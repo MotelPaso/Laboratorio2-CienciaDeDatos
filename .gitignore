@@ -19,3 +19,19 @@ knime/Lab2CienciaDatos/.savedWithData
 # Cachés de vistas y artefactos de KNIME
 knime/Lab2CienciaDatos/*/internalTables/
 knime/Lab2CienciaDatos/.artifacts/
+
+# Excepción: README del repositorio
+!README.md
+
+# Auxiliares de LaTeX (se regeneran al compilar)
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.run.xml
+*.synctex.gz
+*.out
+*.toc

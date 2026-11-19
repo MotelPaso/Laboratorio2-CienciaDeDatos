@@ -1,15 +1,40 @@
 \documentclass[
   journal=largetwo,
   manuscript=Laboratorio-Numero-02,
-  year=2024,
+  year=2026,
   volume=1
 ]{cup-journal}
 
 \usepackage{amsmath}
 \usepackage[nopatch]{microtype}
 \usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{pdflscape}
+\pgfplotsset{compat=1.18}
 
-\title{Título del laboratorio}
+% Nombres en español (no hay babel-spanish instalado)
+\AtBeginDocument{%
+  \renewcommand{\figurename}{Figura}%
+  \renewcommand{\tablename}{Tabla}%
+}
+
+% Estilo común de los gráficos
+\pgfplotsset{
+  informe/.style={
+    width=\columnwidth, height=0.72\columnwidth,
+    tick label style={font=\footnotesize}, label style={font=\footnotesize},
+    legend style={font=\scriptsize, draw=none, fill=white, fill opacity=0.8, text opacity=1},
+    grid=major, grid style={gray!20},
+    ylabel near ticks, xlabel near ticks,
+  },
+  /pgf/number format/use comma,
+}
+\newcommand{\datos}[1]{fig/data/#1}
+\setlength{\emergencystretch}{3em}
+
+\title{Predicción de demanda a 30 días de artículos de moda con regresión logística: caso H\&M}
 
 \author{P. Araya}
 \affiliation{C1, Universidad Católica del Norte, Coquimbo, Coquimbo, Chile}
@@ -17,74 +42,367 @@
 
 \author{G. Guzman}
 \affiliation{C1, Universidad Católica del Norte, Coquimbo, Coquimbo, Chile}
-% si son del mismo paralelo solo aparecerá una vez.
-% \alsoaffiliation{Joint first authors}
 
+\addbibresource{referencias.bib}
 
-\addbibresource{example.bib}
-
-\keywords{keyword entry 1, keyword entry 2, keyword entry 3} %% en minúsculas
+\keywords{regresión logística, predicción de demanda, CRISP-DM, KNIME, retail de moda}
 
 \begin{document}
 
 \begin{abstract}
-El resumen es una de las partes más importantes del artículo científico porque comunica en forma rápida y precisa el contenido básico del artículo sin tener que recurrir al resto de la información. El resumen es una síntesis de un solo párrafo (No excede de 100 ó 150 palabras) del objetivo de la práctica y su conclusión de su resultado principal. El resumen de un artículo científico no es el recuento de antecedentes, tampoco es una revisión histórica, ni el análisis o comentario sobre el artículo. No se elabora antes de terminar el artículo.\\
+La gestión de inventario en el retail de moda exige anticipar qué artículos seguirán vendiéndose en un catálogo que rota rápidamente. Este trabajo evalúa si el historial de ventas, el precio y los atributos de producto permiten predecir, mediante regresión logística, si un artículo de H\&M tendrá al menos una venta en los 30 días siguientes. Siguiendo CRISP-DM, se agregaron 31,8 millones de transacciones en 88.584 artículos con ventanas temporales que evitan la fuga de información, y se compararon en KNIME tres modelos: regularización L2, L1 y L2 sin variables de alta cardinalidad. El modelo L2 obtuvo un ROC-AUC de 0,938, un F1 de 0,786 y una exactitud de 0,883 (frente a 0,731 de la línea base); el 10~\% de artículos mejor puntuados tuvo 98~\% de demanda real. La recencia y las ventas recientes dominan la predicción, aunque las probabilidades requieren recalibración.
 
-\textbf{Lo mismo pero en inglés.}
+\medskip
+\textbf{Abstract (English).} Inventory management in fashion retail requires anticipating which items will keep selling in a fast-rotating catalogue. This work assesses whether sales history, price and product attributes can predict, through logistic regression, whether an H\&M item will record at least one sale in the next 30 days. Following CRISP-DM, 31.8 million transactions were aggregated into 88,584 items using time windows that prevent data leakage, and three models were compared in KNIME: L2 and L1 regularisation, and L2 without high-cardinality variables. The L2 model achieved a ROC-AUC of 0.938, an F1 score of 0.786 and an accuracy of 0.883 (versus a 0.731 baseline); the top-scored 10\% of items had a 98\% observed demand rate. Recency and recent sales dominate the prediction, although the probabilities require recalibration.
 \end{abstract}
 
 \section{Introducción}
 
-La introducción debe responder a la pregunta de ¿porqué se ha hecho este trabajo?, es una descripción ampliada del propósito u objetivo del trabajo, así como aspectos generales relevantes (breve descripción histórica). También deben consignarse aquí las hipótesis que se ponen a prueba en el experimento así como también los objetivos del trabajo desarrollado.
+En el retail de moda la demanda fluctúa con la estacionalidad, las tendencias y una renovación constante del catálogo, lo que vuelve difícil decidir qué artículos reponer, exhibir o liquidar \autocite{fildes2022retail}. Un error en estas decisiones genera quiebres de stock en artículos vigentes o sobreinventario de artículos que ya no rotan. Contar con una estimación, para cada artículo, de la probabilidad de que siga vendiéndose en el corto plazo permite priorizar estas decisiones con evidencia en lugar de reglas fijas.
+
+El conjunto de datos \textit{H\&M Personalized Fashion Recommendations} \autocite{kaggle2022hm} reúne 31,8 millones de transacciones entre septiembre de 2018 y septiembre de 2020, junto con los atributos de 105.542 artículos, y permite abordar este problema a nivel de artículo. Este trabajo plantea la siguiente pregunta de investigación: \emph{¿en qué medida las variables históricas de ventas, precio y atributos de producto permiten predecir, mediante regresión logística, si un artículo tendrá demanda (al menos una venta) en los próximos 30 días?}
+
+El \textbf{objetivo general} es desarrollar y evaluar un modelo de regresión logística que estime esa probabilidad para apoyar decisiones de inventario y surtido. Los \textbf{objetivos específicos} son: (1) caracterizar el comportamiento de ventas y construir variables agregadas por artículo sin usar información de la ventana de predicción; (2) implementar y comparar configuraciones de regresión logística con regularización L1 y L2 bajo una partición estratificada; (3) evaluar su desempeño con matriz de confusión, exactitud, precisión, sensibilidad, F1, ROC-AUC y métricas de calibración; y (4) derivar al menos tres hallazgos y recomendaciones, discutiendo limitaciones y sesgos.
+
+El estudio sigue las fases de CRISP-DM \autocite{wirth2000crisp,chapman2000crisp}: la comprensión del negocio se presenta en esta introducción; la comprensión y preparación de los datos y el modelado, en Materiales y métodos; y la evaluación, en Resultados y discusión.
 
 \section{Marco teórico}
 
-Breve fundamentación teórica del experimento~\autocite{key-Arthur} Explicación de las ecuaciones que se usan en el experimento.  Cuando estemos revisando modelos de machine learning se consideraría como explicar el clasificador que se va a utilizar: Hipótesis (lineal o no lineal), función de pérdida e hiperparámetros. No más de una columna de página. Debe contener referencias.
+\textbf{CRISP-DM} organiza un proyecto de ciencia de datos en seis fases iterativas: comprensión del negocio, comprensión de los datos, preparación, modelado, evaluación y despliegue \autocite{chapman2000crisp}. Su carácter iterativo se refleja en este trabajo, donde los resultados de la evaluación motivaron dos ajustes en la preparación de los datos.
+
+\textbf{Regresión logística.} Para una variable objetivo binaria $y\in\{0,1\}$ y un vector de predictores $\mathbf{x}$, el modelo supone que el logaritmo de las chances (\textit{log-odds}) es lineal en los predictores \autocite{hosmer2013applied}:
+\begin{equation}
+\log\frac{p(\mathbf{x})}{1-p(\mathbf{x})}=\beta_0+\boldsymbol{\beta}^\top\mathbf{x},
+\qquad
+p(\mathbf{x})=\frac{1}{1+e^{-(\beta_0+\boldsymbol{\beta}^\top\mathbf{x})}}.
+\label{eq:logit}
+\end{equation}
+La función sigmoide transforma el predictor lineal en una probabilidad, y la frontera de decisión $p=0{,}5$ es un hiperplano, por lo que el clasificador es lineal en $\mathbf{x}$. El coeficiente $\beta_j$ se interpreta mediante la razón de chances $\mathrm{OR}_j=e^{\beta_j}$: el factor por el que se multiplican las chances de $y=1$ cuando $x_j$ aumenta en una unidad, manteniendo constantes las demás variables. Su intervalo de confianza al 95~\% es $e^{\beta_j\pm1{,}96\,\mathrm{SE}(\beta_j)}$.
+
+\textbf{Estimación y regularización.} Los coeficientes se estiman maximizando la verosimilitud de Bernoulli, lo que equivale a minimizar la entropía cruzada o \textit{log-loss} \autocite{hastie2009esl}:
+\begin{equation}
+\mathcal{L}(\boldsymbol\beta)=-\frac{1}{n}\sum_{i=1}^{n}\bigl[y_i\log p_i+(1-y_i)\log(1-p_i)\bigr].
+\label{eq:logloss}
+\end{equation}
+Con muchos predictores o predictores correlacionados, la estimación se vuelve inestable. Agregar una penalización $\lambda\lVert\boldsymbol\beta\rVert_2^2$ (L2, \textit{ridge}) contrae los coeficientes \autocite{hoerl1970ridge}, mientras que $\lambda\lVert\boldsymbol\beta\rVert_1$ (L1, \textit{lasso}) puede anular algunos y así seleccionar variables \autocite{tibshirani1996lasso}. Desde una perspectiva bayesiana, ambas equivalen a estimar el máximo a posteriori con un prior gaussiano (L2) o de Laplace (L1) sobre $\boldsymbol\beta$ \autocite{hastie2009esl}; así las implementa KNIME \autocite{berthold2009knime}, cuyo optimizador es el gradiente estocástico promediado (SAG) \autocite{schmidt2017sag}.
+
+\textbf{Métricas.} A partir de la matriz de confusión (VP, FP, FN, VN) se calculan la exactitud, la precisión $=\mathrm{VP}/(\mathrm{VP}+\mathrm{FP})$, la sensibilidad (\textit{recall}) $=\mathrm{VP}/(\mathrm{VP}+\mathrm{FN})$, la especificidad y el F1, que es la media armónica de precisión y sensibilidad \autocite{james2021islr}. Con clases desbalanceadas, la exactitud por sí sola es engañosa. El ROC-AUC mide la capacidad de ordenar los casos e independiza la evaluación del umbral; equivale a la probabilidad de que un positivo al azar reciba un puntaje mayor que un negativo al azar, es decir, al estadístico de Mann-Whitney normalizado \autocite{hanley1982auc,fawcett2006roc}:
+\begin{equation}
+\mathrm{AUC}=\frac{\sum_{i:\,y_i=1}r_i-n_1(n_1+1)/2}{n_1\,n_0},
+\label{eq:auc}
+\end{equation}
+donde $r_i$ es el rango de $p_i$ y $n_1$, $n_0$ son las cantidades de positivos y negativos. El puntaje de Brier, $\frac1n\sum(p_i-y_i)^2$ \autocite{brier1950}, y el log-loss (\ref{eq:logloss}) evalúan la calidad de las probabilidades. La curva de calibración compara la probabilidad media predicha con la tasa observada por intervalo \autocite{niculescu2005calibration}, y el \textit{lift} por decil mide cuánto se concentra la clase positiva entre los casos mejor puntuados.
+
+\textbf{Fuga de información.} Ocurre cuando el modelo usa información que no estaría disponible al momento de predecir, lo que infla las métricas sin generalizar \autocite{kaufman2012leakage}. Se evita separando temporalmente las variables de la etiqueta y ajustando toda transformación aprendida (imputación, normalización) solo con el conjunto de entrenamiento.
 
 \section{Materiales y métodos}
-En esta sección se responde a la pregunta de ¿cómo se ha hecho el estudio?. Descripción de las técnicas experimentales usadas, apoyadas en dibujos, gráficas o ejemplos que ayuden a visualizar el experimento. En concreto, tienen que describir o explicar los datos que utilizaron y cómo evaluarán si los resultados son o no positivos. Máximo una plana de extensión.
 
-\begin{table}[]
-    \centering
-\begin{tabular}{|llll|}
-\hline
-\multicolumn{4}{|c|}{Stage: Corridor} \\ \hline
-\multicolumn{4}{|l|}{Hyperparameters:} \\ \hline
-\multicolumn{1}{|c|}{\textbf{Metric}} & \multicolumn{1}{c|}{\textbf{k}} & \multicolumn{1}{c|}{\textbf{MAE}} & \multicolumn{1}{c|}{\textbf{MSE}} \\ \hline
-\multicolumn{1}{|l|}{Min MSE} & \multicolumn{1}{l|}{6} & \multicolumn{1}{l|}{\textbf{$0.1049\pm 0.0217$}} & $0.1049\pm 0.0217$ \\ \hline
-\multicolumn{1}{|l|}{Min MAE} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} &  \\ \hline
+\subsection{Datos y construcción del conjunto de modelado}
+
+Se usaron \texttt{transactions\_train.csv} (31,8 millones de filas, 3,5~GB; fecha, cliente, artículo, precio y canal) y \texttt{articles.csv} (105.542 artículos con 24 atributos de producto) del conjunto de datos de H\&M \autocite{kaggle2022hm}. El precio viene normalizado (rango aproximado de 0 a 0,59) y se interpreta como un índice relativo. El estudio se realizó en dos componentes. Primero, el conjunto de modelado se construyó en Python con \texttt{pandas} (\texttt{Etapa0.py}), porque agregar 31,8 millones de registros en varias ventanas excedía la memoria disponible para KNIME. Luego, la exploración, la preparación, el modelado y la evaluación se realizaron en KNIME \autocite{berthold2009knime}.
+
+La unidad de análisis es el artículo (\texttt{article\_id}). Las transacciones se separaron en una ventana de \textbf{observación} (20-09-2018 a 23-08-2020), con la que se calculan todas las variables predictoras, y una ventana de \textbf{predicción} (24-08-2020 a 22-09-2020), con la que solo se calcula la variable objetivo; así se evita la fuga de información (Tabla~\ref{tab:ventanas}). La variable objetivo, \texttt{y\_demanda\_30d}, vale 1 si el artículo registró al menos una venta en la ventana de predicción y 0 en caso contrario.
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Ventanas temporales (fechas inclusivas) y población.}
+\label{tab:ventanas}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Ventana o criterio & Rango o valor \\
+\midrule
+Observación (predictoras) & 20-09-2018 a 23-08-2020 \\
+Predicción (objetivo) & 24-08-2020 a 22-09-2020 \\
+Últimos 30 / 90 días & desde 25-07-2020 / 26-05-2020 \\
+90 días previos & 26-02-2020 a 25-05-2020 \\
+Mismo período del año anterior & 24-08-2019 a 22-09-2019 \\
+\midrule
+Artículos con $\ge$1 / $\ge$5 / $\ge$10 ventas & 100.757 / 88.584 / 80.458 \\
+Población ($\ge$5 ventas) & 88.584 artículos \\
+Positivos & 23.866 (26,9~\%) \\
+\bottomrule
 \end{tabular}
-\caption{Tabla de Ejemplo}
-    \label{tab:my_label}
 \end{table}
 
-\begin{figure}[!ht]
-    \centering
-    \includegraphics[width=0.8\textwidth]{fig/graphs/seaborntutorialstylingplots.png}
-    \caption{Caption}
-    \label{fig:my_label}
-\end{figure}
+Por artículo se calcularon 20 variables numéricas: volumen (unidades, clientes únicos, días con venta), precio (medio, mínimo, máximo, desviación estándar, último, cambio reciente), actividad por ventana (últimos 30 y 90 días, 90 días previos, tendencia, mismo período de 2019), recencia, antigüedad, intensidad (unidades por cliente y por día activo), fidelidad (proporción de clientes recurrentes) y un indicador de ausencia de historial previo. A ellas se sumaron 8 atributos categóricos de producto (diccionario completo en el Anexo~B). Se excluyeron los artículos con menos de 5 ventas en la observación, porque aportan poca señal y mucha varianza. El resultado, \texttt{tabla\_modelado.csv}, tiene 88.584 filas, sin valores faltantes ni artículos duplicados.
+
+\subsection{Preparación y transformación en KNIME}
+
+El workflow (Anexo~A) se organiza en siete etapas etiquetadas E1 a E7, sin metanodos, con anotaciones que registran cada decisión y rutas relativas al workflow. Tras la carga (E1) y una rama de exploración (E2), la preparación (E3) aplica los siguientes pasos:
+(i) excluye \texttt{article\_id} y \texttt{unidades\_prox\_30d}, que define la etiqueta;
+(ii) agrupa en \texttt{OTROS} las categorías con frecuencia menor al 1~\% en siete atributos. Sin esta agrupación, la codificación \textit{one-hot} generaba unas 550 variables indicadoras con categorías de 1 a 10 artículos; el criterio usa solo $X$, sin mirar la etiqueta;
+(iii) transforma con $\ln(1+x)$ los siete conteos, cuyas distribuciones tienen colas largas (mediana de 93 unidades frente a un percentil 99 de 3.378); y
+(iv) codifica las categóricas en variables indicadoras.
+
+La transformación (E4) parte los datos en entrenamiento (70~\%) y prueba (30~\%) con muestreo estratificado por la etiqueta y semilla 42. La imputación (mediana o moda) y la estandarización Z-score de las numéricas se \textbf{ajustan solo con entrenamiento} y se aplican a la prueba mediante modelos PMML. Como KNIME no ofrece VIF, la multicolinealidad se trató con la matriz de correlación de Pearson. De cada par con $|r|>0{,}8$ se conservó la variable más interpretable y se eliminaron \texttt{clientes\_unicos} ($r=0{,}999$ con \texttt{unidades\_obs}), \texttt{dias\_con\_venta} (0,948), \texttt{unidades\_ult\_90d} (0,922 con la variable de 30 días), \texttt{precio\_max}, \texttt{precio\_min} y \texttt{precio\_ultimo} (0,82--0,96 con \texttt{precio\_medio}). Las mismas columnas se eliminan en entrenamiento y prueba, y quedan 14 numéricas y unas 160 indicadoras. El filtro de varianza baja (umbral 0,001) no eliminó columnas.
+
+\subsection{Modelado y evaluación}
+
+Se compararon tres regresiones logísticas (Tabla~\ref{tab:modelos}), todas con el optimizador SAG, hasta 1000 épocas, tolerancia $10^{-5}$ y categoría de referencia \texttt{"0"}. Las predicciones se clasifican con umbral 0,5. Sobre el conjunto de prueba (26.576 artículos, 7.160 positivos) se calcularon la matriz de confusión, la exactitud, la precisión, la sensibilidad, la especificidad, el F1, el ROC-AUC (Ec.~\ref{eq:auc}), el Brier, el log-loss, la calibración en 10 intervalos y el \textit{lift} por decil, además de los OR con su IC~95~\%. La referencia es el clasificador de clase mayoritaria, cuya exactitud es 0,731.
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Modelos comparados.}
+\label{tab:modelos}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Modelo & Regularización & Variables \\
+\midrule
+M1 & L2 (prior gaussiano, $\sigma^2=1$) & todas \\
+M2 & L1 (prior de Laplace, $\sigma^2=1$) & todas \\
+M3 & L2 (prior gaussiano, $\sigma^2=1$) & sin \texttt{department\_name} \\
+   &                                      & ni \texttt{product\_type\_name} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Reproducibilidad.} El procedimiento se reproduce ejecutando \texttt{Etapa0.py} y luego el workflow completo. Los parámetros están fijos (semilla, proporciones y umbrales), y las métricas, los coeficientes, la calibración y el \textit{lift} se exportan como CSV. Las tablas y figuras de este informe se generan desde esos archivos (Anexo~C).
 
 \section{Resultados y discusión}
 
-Esta sección es el corazón del manuscrito, donde la mayoría de los lectores irán después de leer el resumen. Aquí deben consignarse la tabla de datos de las mediciones directas realizadas en el laboratorio. Las tablas de datos, ilustraciones y gráficas, se identifican con números de series y una descripción concisa y clara. Los encabezados de las columnas deben contener el nombre de la variable, su símbolo y unidades de medida. Junto a cada entrada numérica debe figurar la respectiva incertidumbre, a menos que un análisis de incertidumbre separado que clasifique la precisión de las mediciones. Las gráficas deben tener los ejes coordenados debidamente identificados con sus unidades. Se debe efectuar un análisis riguroso de los datos, las consecuencias, de las observaciones y de las implicaciones físicas de las relaciones entre variables. Si hay un análisis por separado de las incertidumbres experimentales, por métodos estadísticos[2] o no estadísticos, debe incluirse en esta sección. Máximo una plana de extensión.
+\subsection{Exploración de los datos}
+
+La recencia es la variable que más separa ambas clases (Figura~\ref{fig:recencia}). La tasa de demanda cae de 89~\% en los artículos que vendieron en la última semana a 0,2~\% en los que no venden hace más de un año. Dos de cada tres artículos no registraron ventas en los últimos 30 días, y en ellos la demanda futura es de apenas 4,4~\%, frente a 74,7~\% en los que sí vendieron (Tabla~\ref{tab:segmentos}). Haber vendido en el mismo período de 2019 no aumenta la demanda (24,2~\% frente a 28,4~\%), lo que es coherente con un catálogo que rota cada temporada. Por línea de producto, Baby/Children tiene una tasa 3,4 veces menor que Ladieswear.
+
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[informe, ybar, bar width=14pt, ymin=0, ymax=1,
+  ylabel={Tasa de demanda en 30 días}, xlabel={Días desde la última venta},
+  xtick=data, xticklabels={0--7, 8--30, 31--90, 91--365, $>$365},
+  nodes near coords, nodes near coords style={font=\scriptsize, /pgf/number format/fixed, /pgf/number format/precision=2},
+  yticklabel style={/pgf/number format/fixed}, ylabel style={yshift=8pt}, grid=none, height=0.62\columnwidth]
+\addplot[fill=blue!55, draw=blue!70] table[col sep=semicolon, x expr=\coordindex, y=tasa] {\datos{recencia.csv}};
+\end{axis}
+\end{tikzpicture}
+\caption{Tasa de demanda en la ventana de predicción según la recencia de la última venta (88.584 artículos).}
+\label{fig:recencia}
+\end{figure}
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Tasa de demanda por segmento (EDA).}
+\label{tab:segmentos}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Segmento & Artículos & Tasa \\
+\midrule
+Con ventas en últimos 30 días & 28.442 & 74,7~\% \\
+Sin ventas en últimos 30 días & 60.142 & 4,4~\% \\
+Tendencia a 90 días al alza & 12.549 & 71,1~\% \\
+Tendencia a 90 días a la baja & 23.006 & 37,4~\% \\
+Sin cambio o sin historial previo & 53.029 & 12,0~\% \\
+Con ventas en ago.--sep. 2019 & 30.328 & 24,2~\% \\
+Sin ventas en ago.--sep. 2019 & 58.256 & 28,4~\% \\
+Ladieswear / Divided & 35.252 / 13.384 & 37,2 / 32,5~\% \\
+Menswear / Sport & 10.635 / 2.891 & 26,3 / 25,6~\% \\
+Baby/Children & 26.422 & 10,9~\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparación de modelos}
+
+Los tres modelos superan con claridad a la línea base (Tabla~\ref{tab:metricas}). M1 (L2) obtiene el mejor ROC-AUC (0,938), F1 (0,786), Brier (0,100) y log-loss (0,602), y se adopta como modelo principal. En su matriz de confusión hay 5.707 verdaderos positivos, 1.647 falsos positivos, 1.453 falsos negativos y 17.769 verdaderos negativos. M3, que prescinde de los dos atributos de mayor cardinalidad y usa 49 coeficientes menos, pierde solo 0,004 de AUC. M2 (L1) es el más débil: con $\sigma^2=1$, la penalización casi no anuló coeficientes (4 de 176 con $|\beta|<0{,}01$), así que no cumplió su rol de seleccionar variables.
+
+\begin{table*}[!ht]
+\centering\footnotesize
+\caption{Desempeño en el conjunto de prueba (26.576 artículos; umbral 0,5). En negrita, el mejor valor de cada métrica.}
+\label{tab:metricas}
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+Modelo & Exactitud & Precisión & Sensibilidad & Especificidad & F1 & ROC-AUC & Brier & Log-loss \\
+\midrule
+Línea base (clase mayoritaria) & 0,731 & -- & 0,000 & 1,000 & -- & 0,500 & -- & -- \\
+M1 (L2) & \textbf{0,883} & \textbf{0,776} & 0,797 & 0,915 & \textbf{0,786} & \textbf{0,938} & \textbf{0,100} & \textbf{0,602} \\
+M2 (L1) & 0,875 & 0,772 & 0,763 & \textbf{0,917} & 0,767 & 0,927 & 0,111 & 0,775 \\
+M3 (L2 sin alta cardinalidad) & 0,878 & 0,756 & \textbf{0,807} & 0,904 & 0,781 & 0,934 & 0,106 & 0,638 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+El proceso fue iterativo (Tabla~\ref{tab:evolucion}). La primera versión, sin transformación logarítmica, producía probabilidades saturadas y un OR de $2{,}7\cdot10^{17}$ para \texttt{unidades\_ult\_30d}. La transformación $\ln(1+x)$ mejoró la exactitud y el Brier. El filtro de correlación, a su vez, redujo el log-loss de 0,726 a 0,602 y eliminó coeficientes que se compensaban con signos opuestos.
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Evolución de M1 según la preparación.}
+\label{tab:evolucion}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Versión & Exact. & F1 & AUC & Log-loss \\
+\midrule
+Base (Z-score) & 0,879 & 0,771 & 0,936 & 0,732 \\
++ $\ln(1+x)$ & 0,890 & 0,788 & 0,935 & 0,726 \\
++ filtro $|r|>0{,}8$ (final) & 0,883 & 0,786 & 0,938 & 0,602 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Capacidad de priorización y calibración}
+
+Como herramienta de priorización, el modelo es muy efectivo (Figura~\ref{fig:ganancia}): el 10~\% de artículos con mayor probabilidad según M1 tiene una tasa de demanda real de 98,2~\% (\textit{lift} de 3,64), y el 30~\% superior reúne el 83~\% de los artículos que efectivamente vendieron. En el extremo opuesto, la mitad inferior casi no vende: el último decil tiene una tasa de 0,3~\%. Los tres modelos tienen curvas prácticamente superpuestas.
+
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[informe, xmin=0, xmax=100, ymin=0, ymax=1,
+  xlabel={\% de artículos (ordenados por probabilidad)}, ylabel={\% acumulado de artículos con demanda},
+  yticklabel={\pgfmathparse{\tick*100}\pgfmathprintnumber[fixed,precision=0]{\pgfmathresult}},
+  legend pos=south east]
+\addplot[blue!70!black, thick, mark=*, mark size=1.3pt] table[col sep=semicolon, x=pct_articulos, y=pct_positivos] {\datos{ganancia_M1.csv}};
+\addplot[red!70!black, thick, dashed, mark=square*, mark size=1.1pt] table[col sep=semicolon, x=pct_articulos, y=pct_positivos] {\datos{ganancia_M2.csv}};
+\addplot[green!50!black, thick, dotted, mark=triangle*, mark size=1.3pt] table[col sep=semicolon, x=pct_articulos, y=pct_positivos] {\datos{ganancia_M3.csv}};
+\addplot[gray, thin] coordinates {(0,0) (100,1)};
+\legend{M1 (L2), M2 (L1), M3 (L2 reducido), Aleatorio}
+\end{axis}
+\end{tikzpicture}
+\caption{Curva de ganancia acumulada por decil en el conjunto de prueba.}
+\label{fig:ganancia}
+\end{figure}
+
+Las probabilidades, en cambio, no están bien calibradas (Figura~\ref{fig:calibracion}). El 91~\% de las predicciones de M1 cae por debajo de 0,1 o por encima de 0,9, y el modelo es sobreconfiado: en el intervalo 0--0,1 predice en promedio 0,004 cuando la tasa real es 0,057, y entre 0,5 y 0,9 predice alrededor de 0,75 cuando la tasa real ronda 0,45 (tabla completa en el Anexo~C). El modelo ordena bien los artículos, pero sus probabilidades no deben leerse directamente como frecuencias.
+
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[informe, xmin=0, xmax=1, ymin=0, ymax=1,
+  xlabel={Probabilidad media predicha}, ylabel={Tasa observada de demanda},
+  xticklabel style={/pgf/number format/fixed}, yticklabel style={/pgf/number format/fixed},
+  legend pos=north west]
+\addplot[blue!70!black, thick, mark=*, mark size=1.3pt] table[col sep=semicolon, x=p_media, y=tasa_obs] {\datos{calibracion_M1.csv}};
+\addplot[red!70!black, thick, dashed, mark=square*, mark size=1.1pt] table[col sep=semicolon, x=p_media, y=tasa_obs] {\datos{calibracion_M2.csv}};
+\addplot[green!50!black, thick, dotted, mark=triangle*, mark size=1.3pt] table[col sep=semicolon, x=p_media, y=tasa_obs] {\datos{calibracion_M3.csv}};
+\addplot[gray, thin] coordinates {(0,0) (1,1)};
+\legend{M1 (L2), M2 (L1), M3 (L2 reducido), Calibración perfecta}
+\end{axis}
+\end{tikzpicture}
+\caption{Curva de calibración en 10 intervalos de probabilidad (conjunto de prueba).}
+\label{fig:calibracion}
+\end{figure}
+
+\subsection{Interpretación de los coeficientes}
+
+La Tabla~\ref{tab:coef} muestra los coeficientes numéricos que conservan su signo y una magnitud similar en M1 y M3. Las variables están estandarizadas, así que cada OR corresponde a un aumento de una desviación estándar (DE). La venta reciente domina: una DE más en $\ln(1+\text{unidades de los últimos 30 días})$, lo que equivale a multiplicar $(1+\text{unidades})$ por 4,3, multiplica las chances de demanda por unas 1.200. A la inversa, una DE más de recencia (unos 200 días adicionales sin vender) las reduce a un 2~\%. La antigüedad del artículo (OR 0,27--0,39) y las compras concentradas en pocos clientes (unidades por cliente, OR 0,21--0,30) también reducen la demanda. Un precio reciente mayor que el promedio histórico la aumenta (OR 1,7--1,9), posiblemente porque los artículos vigentes vuelven a su precio completo tras una liquidación. Los demás coeficientes cambian de signo entre modelos y no se interpretan (ver Limitaciones).
+
+\begin{table*}[!ht]
+\centering\footnotesize
+\caption{Coeficientes numéricos estables (variables estandarizadas; conteos en $\ln(1+x)$). OR por +1 DE con IC 95~\%.}
+\label{tab:coef}
+\begin{tabular}{@{}lrlrl@{}}
+\toprule
+Variable & $\beta$ M1 & OR M1 [IC 95~\%] & $\beta$ M3 & OR M3 [IC 95~\%] \\
+\midrule
+\texttt{unidades\_ult\_30d} (log) & 7,11 & 1.226 [952; 1.578] & 7,16 & 1.283 [995; 1.653] \\
+\texttt{dias\_desde\_ultima\_venta} & $-$4,05 & 0,017 [0,013; 0,022] & $-$3,93 & 0,020 [0,016; 0,025] \\
+\texttt{dias\_desde\_primera\_venta} & $-$0,94 & 0,392 [0,351; 0,437] & $-$1,31 & 0,271 [0,245; 0,301] \\
+\texttt{unidades\_por\_cliente} & $-$1,57 & 0,209 [0,164; 0,266] & $-$1,20 & 0,302 [0,247; 0,370] \\
+\texttt{unidades\_90d\_previos} (log) & 0,69 & 1,998 [1,782; 2,241] & 0,58 & 1,791 [1,606; 1,998] \\
+\texttt{sin\_hist\_previo} & $-$0,52 & 0,595 [0,538; 0,658] & $-$0,52 & 0,593 [0,539; 0,652] \\
+\texttt{cambio\_precio\_30d} & 0,51 & 1,660 [1,555; 1,771] & 0,62 & 1,854 [1,739; 1,977] \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Hallazgos}
+
+\begin{enumerate}
+\item \textbf{La venta reciente y la recencia explican la mayor parte de la demanda futura.} Así lo muestran tanto el EDA (89~\% frente a 0,2~\%) como los dos coeficientes más grandes y estables. Una regla simple de recencia ya separa gran parte de los casos, y el modelo aporta un ordenamiento más fino.
+\item \textbf{El modelo es muy útil para priorizar.} Con un AUC de 0,938, el decil superior concentra artículos con 98~\% de demanda, y la mitad inferior agrupa artículos con muy baja probabilidad de volver a vender.
+\item \textbf{Los atributos de alta cardinalidad aportan poco.} M3 rinde casi igual que M1 con un modelo más simple, de modo que la dinámica de ventas pesa más que el tipo de producto.
+\item \textbf{La estacionalidad anual no predice en esta ventana.} La rotación del catálogo hace que lo vendido en 2019 no anticipe la demanda de 2020; en cambio, la antigüedad del artículo la reduce.
+\item \textbf{Hay segmentos de baja rotación}, como Baby/Children, con una demanda 3,4 veces menor que Ladieswear.
+\end{enumerate}
+
+\subsection{Utilidad y aplicación profesional}
+
+El modelo puede integrarse en una revisión periódica del surtido. Los artículos del decil superior serían candidatos a reposición y visibilidad; los de probabilidad muy baja (sin ventas en 30 días y con más de 90 días de recencia), candidatos a liquidación o retiro; y los segmentos de baja rotación, a una revisión de compra. Para pasar de priorizar a cuantificar (por ejemplo, unidades a reponer) habría que recalibrar las probabilidades \autocite{niculescu2005calibration} y modelar la cantidad vendida, no solo su ocurrencia.
+
+\subsection{Limitaciones}
+
+\textbf{Técnica: no convergencia del optimizador.} El solver SAG no convergió en ninguno de los tres modelos, ni siquiera con 1000 épocas. Las métricas predictivas son consistentes entre modelos y corridas, pero seis coeficientes numéricos (por ejemplo, \texttt{precio\_medio}, \texttt{precio\_sd} y \texttt{tendencia\_90d}) cambian de signo o pierden significancia entre M1 y M3, que solo difieren en dos grupos de indicadoras. Por eso, solo se interpretaron los coeficientes estables. Se proponen como mejoras ajustar la tasa de aprendizaje o estimar el modelo con otro software para contrastarlo.
+\textbf{Metodológicas.} Se usó una sola ventana de predicción, en plena pandemia, sin validación temporal; la etiqueta es binaria; el umbral 0,5 y la regularización ($\sigma^2=1$) no se optimizaron; los errores estándar bajo L1 no son válidos (varios IC de 0 a $\infty$ en M2); la correlación por pares no detecta colinealidad entre tres o más variables; \texttt{department\_name} queda 62~\% en \texttt{OTROS}; y la población excluye artículos con menos de 5 ventas, por lo que el modelo no aplica a lanzamientos.
+
+\subsection{Contraste con otro grupo}
+% Sección intencionalmente vacía (no se realizó el contraste con otro grupo).
 
 \section{Conclusiones}
 
-La justificación para escribir un informe de laboratorio la constituyen las conclusiones que obtenemos a partir de nuestras observaciones y medidas. Se discute el acuerdo o la discrepancia entre el modelo propuesto y el comportamiento observado, así como la validez de las hipótesis planteadas. Finalmente, se procede a efectuar interpretaciones o conjeturas sobre las razones de las discrepancias y a sugerir refinamientos, bien sea del modelo o del procedimiento experimental, que permitan dilucidar los interrogantes a los que el experimento dio lugar. Información extraída de los resultados obtenidos. Por ejemplo, este problema funciona mejor
-con un clasificador lineal, con kernel de tipo A y datos normalizados con la técnica X.
-También, se puede observar que el ruido afecta el rendimiento del clasificador y que en
-ciertas ocasiones conviene…
-No más de una columna de página.
+Las variables históricas de ventas, precio y atributos permiten predecir con alta capacidad discriminante si un artículo de H\&M tendrá demanda en los próximos 30 días. La regresión logística L2 (M1) alcanzó un ROC-AUC de 0,938 y un F1 de 0,786, y su exactitud (0,883) supera en 15 puntos a la línea base, lo que responde afirmativamente a la pregunta de investigación. Respecto de los objetivos específicos: (1) se construyó un conjunto de 88.584 artículos con ventanas temporales sin fuga de información; (2) se compararon regularización L2 y L1 y un modelo reducido, y L2 fue superior, mientras que L1 no seleccionó variables con la penalización usada; (3) la evaluación mostró una excelente discriminación pero probabilidades sobreconfiadas; y (4) se obtuvieron cinco hallazgos. El principal es que la venta reciente y la recencia dominan la predicción, y que los atributos detallados de producto aportan poco.
 
-%\endnote in some journals will behave like \footnote; and \printendnotes will not output anything.
+La recomendación es usar el modelo para ordenar y priorizar artículos, no como estimador directo de probabilidades. Como trabajo futuro se propone recalibrar las probabilidades, validar en varias ventanas temporales, optimizar la regularización y el umbral, resolver la convergencia del optimizador y extender el problema a la predicción de la cantidad de unidades.
+
 \printendnotes
-%se le recomienda para la bibliografía usear como guía la forma de este lab utilizando el archivo example.bib como referencia. Si desea no usarlo, sus referencias deben ser en APA.
-\printbibliography
+\printbibliography[title={Referencias}]
 
 \appendix
+\clearpage
+\onecolumn
 
-\section{Anexos}
-Aquí consigne las relaciones de incertidumbres usadas, si son muchas tablas y gráficos y los considera importante los puede consignar aquí.
+\section{Anexo A: workflow KNIME}
+
+El workflow \texttt{knime/Lab2CienciaDatos} (Figura~\ref{fig:workflow}, al final del documento) tiene 79 nodos visibles, organizados en: E1 Carga (lectura de \texttt{tabla\_modelado.csv}); E2 EDA (estadísticos, correlación, tasas por segmento, gráficos de barras y de caja); E3 Preparación (duplicados, selección de columnas, 7 \textit{Rule Engine} de agrupación al 1~\%, $\ln(1+x)$, \textit{One to Many}); E4 Transformación (partición, imputación y Z-score con PMML, filtros de varianza y correlación); E5 Modelado (tres \textit{Logistic Regression Learner} y \textit{Predictor}); E6 Evaluación (\textit{Scorer}, ROC, indicadores, AUC, calibración, \textit{lift} y coeficientes); y E7 Salidas (4 \textit{CSV Writer}). Cada etapa tiene una anotación con su decisión metodológica.
+
+
+\section{Anexo B: diccionario de variables}
+
+\begin{table}[!ht]
+\centering\footnotesize\renewcommand{\arraystretch}{0.92}
+\caption{Variables del conjunto de modelado. (†) eliminada por correlación $|r|>0{,}8$; (log) transformada con $\ln(1+x)$.}
+\label{tab:variables}
+\begin{tabular}{@{}lp{0.62\textwidth}@{}}
+\toprule
+Variable & Descripción \\
+\midrule
+\texttt{y\_demanda\_30d} & Objetivo: 1 si hubo $\ge$1 venta entre 24-08-2020 y 22-09-2020 \\
+\texttt{unidades\_obs} (log) & Unidades vendidas en la observación \\
+\texttt{clientes\_unicos} (log, †) & Clientes distintos que compraron el artículo \\
+\texttt{dias\_con\_venta} (log, †) & Días distintos con al menos una venta \\
+\texttt{unidades\_ult\_30d} (log) & Unidades en los últimos 30 días de observación \\
+\texttt{unidades\_ult\_90d} (log, †) & Unidades en los últimos 90 días de observación \\
+\texttt{unidades\_90d\_previos} (log) & Unidades en los 90 días anteriores \\
+\texttt{tendencia\_90d} & Cambio relativo entre los últimos 90 días y los 90 previos (0 si no hay historial previo) \\
+\texttt{sin\_hist\_previo} & 1 si no hubo ventas en los 90 días previos \\
+\texttt{ventas\_mismo\_calendario} (log) & Unidades entre 24-08-2019 y 22-09-2019 \\
+\texttt{dias\_desde\_ultima\_venta} & Recencia: 23-08-2020 menos la fecha de la última venta \\
+\texttt{dias\_desde\_primera\_venta} & Antigüedad: 23-08-2020 menos la fecha de la primera venta \\
+\texttt{unidades\_por\_cliente} & Unidades / clientes únicos \\
+\texttt{unidades\_por\_dia\_activo} & Unidades / días con venta \\
+\texttt{share\_clientes\_recurrentes} & Proporción de clientes con 2 o más compras del artículo \\
+\texttt{precio\_medio}, \texttt{precio\_sd} & Media y desviación estándar del precio \\
+\texttt{precio\_min}, \texttt{precio\_max}, \texttt{precio\_ultimo} (†) & Precio mínimo, máximo y último \\
+\texttt{cambio\_precio\_30d} & Precio último menos precio medio \\
+Categóricas (one-hot) & \texttt{product\_type\_name}, \texttt{product\_group\_name}, \texttt{index\_group\_name}, \texttt{garment\_group\_name}, \texttt{colour\_group\_name}, \texttt{graphical\_appearance\_name}, \texttt{section\_name}, \texttt{department\_name}; niveles $<$1~\% agrupados en \texttt{OTROS} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Anexo C: calibración completa y trazabilidad}
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Calibración de M1 por intervalo de probabilidad.}
+\label{tab:calibracion}
+\pgfplotstabletypeset[
+  col sep=semicolon,
+  columns={intervalo,p_media,tasa_obs,n},
+  columns/intervalo/.style={column name={Intervalo}, string type},
+  columns/p_media/.style={column name={P media}, fixed, precision=3, zerofill},
+  columns/tasa_obs/.style={column name={Tasa real}, fixed, precision=3, zerofill},
+  columns/n/.style={column name={Artículos}, int detect, 1000 sep={.}},
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+]{\datos{calibracion_M1.csv}}
+\end{table}
+
+\textbf{Trazabilidad.} \texttt{Etapa0.py} construye \texttt{tabla\_modelado.csv}; el workflow lee y escribe en su carpeta \texttt{data/} (rutas relativas); \texttt{scripts/datos\_informe.py} transforma sus salidas en los datos de las figuras (\texttt{fig/data/}). Para reproducir: copiar los CSV de H\&M en \texttt{knime/Lab2CienciaDatos/data/}, ejecutar \texttt{Etapa0.py}, ejecutar el workflow, ejecutar \texttt{datos\_informe.py} y compilar este documento.
+
+\begin{landscape}
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth]{fig/workflow.pdf}
+\caption{Estructura del workflow KNIME (79 nodos; el flujo avanza de izquierda a derecha: E1 Carga y E2 EDA a la izquierda, E3--E4 al centro, E5--E7 a la derecha). Los nombres de los nodos y las anotaciones por etapa se ven al abrir el workflow en KNIME.}
+\label{fig:workflow}
+\end{figure}
+\end{landscape}
 
 \end{document}
