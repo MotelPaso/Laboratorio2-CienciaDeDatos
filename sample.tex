@@ -8,6 +8,9 @@
 \usepackage{amsmath}
 \usepackage[nopatch]{microtype}
 \usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
 \usepackage{graphicx}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
@@ -50,25 +53,25 @@
 \begin{document}
 
 \begin{abstract}
-La gestión de inventario en el retail de moda exige anticipar qué artículos seguirán vendiéndose en un catálogo que rota rápidamente. Este trabajo evalúa si el historial de ventas, el precio y los atributos de producto permiten predecir, mediante regresión logística, si un artículo de H\&M tendrá al menos una venta en los 30 días siguientes. Siguiendo CRISP-DM, se agregaron 31,8 millones de transacciones en 88.584 artículos con ventanas temporales que evitan la fuga de información, y se compararon en KNIME tres modelos: regularización L2, L1 y L2 sin variables de alta cardinalidad. El modelo L2 obtuvo un ROC-AUC de 0,938, un F1 de 0,786 y una exactitud de 0,883 (frente a 0,731 de la línea base); el 10~\% de artículos mejor puntuados tuvo 98~\% de demanda real. La recencia y las ventas recientes dominan la predicción, aunque las probabilidades requieren recalibración.
+La gestión de inventario en el retail de moda exige anticipar qué artículos seguirán vendiéndose en un catálogo que rota rápidamente. Este trabajo evalúa si el historial de ventas, el precio y los atributos de producto permiten predecir, mediante regresión logística, si un artículo de H\&M tendrá al menos una venta en los 30 días siguientes. Siguiendo CRISP-DM, se agregaron 31,8 millones de transacciones en 88.584 artículos con ventanas temporales que evitan la fuga de información, y se compararon en KNIME tres modelos: regularización L2, L1 y L2 sin variables de alta cardinalidad. El modelo L2 obtuvo un ROC-AUC de 0,938, un F1 de 0,786 y un accuracy de 0,883 (frente a 0,731 de la línea base); el top 10~\% de artículos tuvo 98~\% de demanda real. La recencia y las ventas recientes dominan la predicción, aunque las probabilidades requieren recalibración.
 
 \medskip
-\textbf{Abstract (English).} Inventory management in fashion retail requires anticipating which items will keep selling in a fast-rotating catalogue. This work assesses whether sales history, price and product attributes can predict, through logistic regression, whether an H\&M item will record at least one sale in the next 30 days. Following CRISP-DM, 31.8 million transactions were aggregated into 88,584 items using time windows that prevent data leakage, and three models were compared in KNIME: L2 and L1 regularisation, and L2 without high-cardinality variables. The L2 model achieved a ROC-AUC of 0.938, an F1 score of 0.786 and an accuracy of 0.883 (versus a 0.731 baseline); the top-scored 10\% of items had a 98\% observed demand rate. Recency and recent sales dominate the prediction, although the probabilities require recalibration.
+\textbf{Abstract (English).} Inventory management in fashion retail requires anticipating which items will keep selling in a fast-rotating catalogue. This work assesses whether sales history, price and product attributes can predict, through logistic regression, whether an H\&M item will record at least one sale in the next 30 days. Following CRISP-DM, 31.8 million transactions were aggregated into 88,584 items using time windows that prevent data leakage, and three models were compared in KNIME: L2 and L1 regularisation, and L2 without high-cardinality variables. The L2 model achieved a ROC-AUC of 0.938, an F1 score of 0.786 and an accuracy of 0.883 (versus a 0.731 baseline), finding that the top-scored 10\% of items had a 98\% observed demand rate. Recency and recent sales dominate the prediction, although the probabilities require recalibration.
 \end{abstract}
 
 \section{Introducción}
 
-En el retail de moda la demanda fluctúa con la estacionalidad, las tendencias y una renovación constante del catálogo, lo que vuelve difícil decidir qué artículos reponer, exhibir o liquidar \autocite{fildes2022retail}. Un error en estas decisiones genera quiebres de stock en artículos vigentes o sobreinventario de artículos que ya no rotan. Contar con una estimación, para cada artículo, de la probabilidad de que siga vendiéndose en el corto plazo permite priorizar estas decisiones con evidencia en lugar de reglas fijas.
+En el negocio de la moda la demanda cambia constantemente, variables como la estacionalidad y las tendencias actuales fuerzan una renovación constante del catálogo, lo que vuelve difícil decidir qué artículos reponer, exhibir o poner en descuento \autocite{fildes2022retail}. Un error en estas decisiones genera problemas de stock en artículos vigentes o sobreinventario de artículos que ya no se venderán. Contar con una estimación, para cada artículo, de la probabilidad de que siga vendiéndose en el corto plazo permite priorizar estas decisiones con evidencia en lugar de reglas fijas.
 
-El conjunto de datos \textit{H\&M Personalized Fashion Recommendations} \autocite{kaggle2022hm} reúne 31,8 millones de transacciones entre septiembre de 2018 y septiembre de 2020, junto con los atributos de 105.542 artículos, y permite abordar este problema a nivel de artículo. Este trabajo plantea la siguiente pregunta de investigación: \emph{¿en qué medida las variables históricas de ventas, precio y atributos de producto permiten predecir, mediante regresión logística, si un artículo tendrá demanda (al menos una venta) en los próximos 30 días?}
+El conjunto de datos \textit{H\&M Personalized Fashion Recommendations} \autocite{kaggle2022hm} reúne 31,8 millones de transacciones entre septiembre de 2018 y septiembre de 2020, junto con los atributos de 105.542 artículos, y permite abordar este problema viendo cada prenda. Este trabajo plantea la siguiente pregunta de investigación:
 
-El \textbf{objetivo general} es desarrollar y evaluar un modelo de regresión logística que estime esa probabilidad para apoyar decisiones de inventario y surtido. Los \textbf{objetivos específicos} son: (1) caracterizar el comportamiento de ventas y construir variables agregadas por artículo sin usar información de la ventana de predicción; (2) implementar y comparar configuraciones de regresión logística con regularización L1 y L2 bajo una partición estratificada; (3) evaluar su desempeño con matriz de confusión, exactitud, precisión, sensibilidad, F1, ROC-AUC y métricas de calibración; y (4) derivar al menos tres hallazgos y recomendaciones, discutiendo limitaciones y sesgos.
+¿En qué medida las variables históricas de ventas, precio y atributos de producto permiten predecir, mediante regresión logística, si un artículo tendrá demanda (al menos una venta) en los próximos 30 días?
 
-El estudio sigue las fases de CRISP-DM \autocite{wirth2000crisp,chapman2000crisp}: la comprensión del negocio se presenta en esta introducción; la comprensión y preparación de los datos y el modelado, en Materiales y métodos; y la evaluación, en Resultados y discusión.
+El \textbf{objetivo general} es desarrollar y evaluar un modelo de regresión logística que estime la probabilidad de que un artículo tenga demanda en los próximos 30 días, utilizando su historial de transacciones y atributos de producto, para apoyar decisiones de inventario y surtido. Los \textbf{objetivos específicos} son: (1) caracterizar el comportamiento de ventas y construir variables agregadas por artículo sin usar información de la ventana de predicción; (2) implementar y comparar configuraciones de regresión logística con regularización L1 y L2 bajo una partición estratificada; (3) evaluar su desempeño con matriz de confusión, exactitud, precisión, sensibilidad, F1, ROC-AUC y métricas de calibración; y (4) derivar al menos tres hallazgos y recomendaciones, discutiendo limitaciones y sesgos.
 
 \section{Marco teórico}
 
-\textbf{CRISP-DM} organiza un proyecto de ciencia de datos en seis fases iterativas: comprensión del negocio, comprensión de los datos, preparación, modelado, evaluación y despliegue \autocite{chapman2000crisp}. Su carácter iterativo se refleja en este trabajo, donde los resultados de la evaluación motivaron dos ajustes en la preparación de los datos.
+\textbf{Proceso CRISP-DM.} El estudio sigue el modelo \textit{Cross-Industry Standard Process for Data Mining}, que organiza un proyecto de ciencia de datos en seis fases iterativas: comprensión del problema, comprensión de los datos, preparación, modelado, evaluación y despliegue (Chapman et al. 2000). Su carácter iterativo se refleja en este trabajo, donde los resultados de la evaluación motivaron dos ajustes en la preparación de los datos.
 
 \textbf{Regresión logística.} Para una variable objetivo binaria $y\in\{0,1\}$ y un vector de predictores $\mathbf{x}$, el modelo supone que el logaritmo de las chances (\textit{log-odds}) es lineal en los predictores \autocite{hosmer2013applied}:
 \begin{equation}
@@ -86,12 +89,56 @@ La función sigmoide transforma el predictor lineal en una probabilidad, y la fr
 \end{equation}
 Con muchos predictores o predictores correlacionados, la estimación se vuelve inestable. Agregar una penalización $\lambda\lVert\boldsymbol\beta\rVert_2^2$ (L2, \textit{ridge}) contrae los coeficientes \autocite{hoerl1970ridge}, mientras que $\lambda\lVert\boldsymbol\beta\rVert_1$ (L1, \textit{lasso}) puede anular algunos y así seleccionar variables \autocite{tibshirani1996lasso}. Desde una perspectiva bayesiana, ambas equivalen a estimar el máximo a posteriori con un prior gaussiano (L2) o de Laplace (L1) sobre $\boldsymbol\beta$ \autocite{hastie2009esl}; así las implementa KNIME \autocite{berthold2009knime}, cuyo optimizador es el gradiente estocástico promediado (SAG) \autocite{schmidt2017sag}.
 
-\textbf{Métricas.} A partir de la matriz de confusión (VP, FP, FN, VN) se calculan la exactitud, la precisión $=\mathrm{VP}/(\mathrm{VP}+\mathrm{FP})$, la sensibilidad (\textit{recall}) $=\mathrm{VP}/(\mathrm{VP}+\mathrm{FN})$, la especificidad y el F1, que es la media armónica de precisión y sensibilidad \autocite{james2021islr}. Con clases desbalanceadas, la exactitud por sí sola es engañosa. El ROC-AUC mide la capacidad de ordenar los casos e independiza la evaluación del umbral; equivale a la probabilidad de que un positivo al azar reciba un puntaje mayor que un negativo al azar, es decir, al estadístico de Mann-Whitney normalizado \autocite{hanley1982auc,fawcett2006roc}:
+\textbf{Métricas.} Para calcular el rendimento del modelo, usamos varias metricas claves.
+
+\begin{enumerate}
+  \item \textbf{Matriz de confusion.} Al fijar un umbral sobre $p(\mathbf{x})$, cada artículo queda clasificado en una de las cuatro celdas de la matriz de confusión, que cruza la clase real con la predicha (Tabla~\ref{tab:confusion}). A partir de ella se calculan la exactitud, la precisión, la sensibilidad (\textit{recall}), la especificidad y el F1, que es la media armónica de precisión y sensibilidad \autocite{james2021islr,fawcett2006roc}.
+\par\medskip\noindent\begin{minipage}{\linewidth}
+\captionof{table}{Matriz de confusión para la predicción de demanda.}\label{tab:confusion}
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}l>{\centering\arraybackslash}X>{\centering\arraybackslash}X@{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{Predicho}} \\
+\cmidrule(l){2-3}
+\textbf{Real} & \textbf{Con demanda (1)} & \textbf{Sin demanda (0)} \\
+\midrule
+\textbf{Con demanda (1)} & VP & FN \\
+\textbf{Sin demanda (0)} & FP & VN \\
+\bottomrule
+\end{tabularx}
+\end{minipage}\par\medskip
+
+Un \textbf{VP} es un artículo que vende y el modelo lo anticipa, y un \textbf{VN}, uno que no vende y el modelo lo descarta. Los errores tienen costos distintos para el negocio: un \textbf{FN} (vende, pero el modelo no lo anticipa) arriesga un quiebre de stock, y un \textbf{FP} (el modelo anticipa demanda, pero no vende) arriesga sobreinventario. Las métricas derivadas se resumen en la Tabla~\ref{tab:metricas-def}, con $n=\mathrm{VP}+\mathrm{FP}+\mathrm{FN}+\mathrm{VN}$.
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
+\captionof{table}{Métricas derivadas de la matriz de confusión.}\label{tab:metricas-def}
+\centering
+\small
+\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\centering\arraybackslash}p{0.3\linewidth}>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Métrica} & \textbf{Fórmula} & \textbf{Qué mide} \\
+\midrule
+Exactitud & $\frac{\mathrm{VP}+\mathrm{VN}}{n}$ & Artículos bien clasificados \\
+Precisión & $\frac{\mathrm{VP}}{\mathrm{VP}+\mathrm{FP}}$ & De los predichos con demanda, cuántos venden \\
+Sensibilidad & $\frac{\mathrm{VP}}{\mathrm{VP}+\mathrm{FN}}$ & De los que venden, cuántos se detectan \\
+Especificidad & $\frac{\mathrm{VN}}{\mathrm{VN}+\mathrm{FP}}$ & De los que no venden, cuántos se descartan \\
+F1 & $\frac{2\,\mathrm{Prec}\cdot\mathrm{Sens}}{\mathrm{Prec}+\mathrm{Sens}}$ & Equilibrio entre precisión y sensibilidad \\
+\bottomrule
+\end{tabularx}
+\end{minipage}\par\medskip
+
+  \item \textbf{ROC-AUC}
+
+Con clases desbalanceadas, la exactitud por sí sola no es confiable: un modelo que prediga siempre la clase mayoritaria (sin demanda) acierta en el 73~\% de los casos sin detectar ningún artículo con demanda. El ROC-AUC mide la capacidad de ordenar los casos e independiza la evaluación del umbral; equivale a la probabilidad de que un positivo al azar reciba un puntaje mayor que un negativo al azar, es decir, al estadístico de Mann-Whitney normalizado \autocite{hanley1982auc,fawcett2006roc}:
 \begin{equation}
 \mathrm{AUC}=\frac{\sum_{i:\,y_i=1}r_i-n_1(n_1+1)/2}{n_1\,n_0},
 \label{eq:auc}
 \end{equation}
 donde $r_i$ es el rango de $p_i$ y $n_1$, $n_0$ son las cantidades de positivos y negativos. El puntaje de Brier, $\frac1n\sum(p_i-y_i)^2$ \autocite{brier1950}, y el log-loss (\ref{eq:logloss}) evalúan la calidad de las probabilidades. La curva de calibración compara la probabilidad media predicha con la tasa observada por intervalo \autocite{niculescu2005calibration}, y el \textit{lift} por decil mide cuánto se concentra la clase positiva entre los casos mejor puntuados.
+
+\end{enumerate}
 
 \textbf{Fuga de información.} Ocurre cuando el modelo usa información que no estaría disponible al momento de predecir, lo que infla las métricas sin generalizar \autocite{kaufman2012leakage}. Se evita separando temporalmente las variables de la etiqueta y ajustando toda transformación aprendida (imputación, normalización) solo con el conjunto de entrenamiento.
 
