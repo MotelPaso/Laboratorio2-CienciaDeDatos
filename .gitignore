@@ -1,0 +1,17 @@
+# KNIME workspace
+knime/.metadata
+knime/Example Workflows
+
+# Datos crudos y resultados derivados (3.8 GB): no versionar
+knime/Lab2CienciaDatos/*.csv
+knime/Lab2CienciaDatos/data/
+knime/Lab2CienciaDatos/resultados/
+
+# Cachés internas de nodos y estado de sesión
+knime/Lab2CienciaDatos/*/port_*
+knime/Lab2CienciaDatos/*/internal/
+knime/Lab2CienciaDatos/.knimeLock
+knime/Lab2CienciaDatos/.savedWithData
+
+# Documentos de la asignatura
+*.md
